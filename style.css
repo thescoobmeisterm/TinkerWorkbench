@@ -5,7 +5,18 @@
 @keyframes puff{0%,100%{transform:translateY(10px) scale(1);opacity:.65}50%{transform:translateY(-18px) scale(1.18);opacity:1}}
 @media (prefers-reduced-motion:reduce){.puff,.puff.delay{animation:none}}
 .board.smoked .controller{filter:saturate(.35) brightness(.85)}
-body.sandbox .led-part{right:3%;top:248px}body.sandbox .res-part{left:16%;top:248px}body.sandbox .button-part{left:50%;top:268px;right:auto}body.sandbox .servo-part{right:24%;top:198px}body.sandbox .pot-part{left:32%;top:300px}
+/* Let the sandbox breadboard grow with its components, not fixed offsets. */
+body.sandbox .board{height:auto;min-height:430px;padding:292px 8% 76px}
+body.sandbox .controller{width:92%}
+body.sandbox .breadboard{height:auto;bottom:24px}
+body.sandbox .holes{left:16px;right:16px;top:88px;bottom:32px;height:auto}
+body.sandbox .breadboard-label{left:16px}
+body.sandbox .rail-pin.plus{top:30px;left:12px}
+body.sandbox .rail-pin.minus{top:30px;left:auto;right:12px}
+body.sandbox #parts-on-board{position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:28px 16px;align-items:start}
+body.sandbox #parts-on-board .part{position:relative;inset:auto;justify-self:center;max-width:100%}
+body.sandbox .pin{min-width:44px;min-height:44px}
+body.sandbox .breadboard-foot{left:16px;right:16px;word-spacing:3px}
 body.sandbox #live-controls{display:grid;gap:8px}
 html,body{overflow-x:hidden;max-width:100%}
 header,main,.app,.workspace-grid,.workbench,.guide,.code-panel,.run-panel{min-width:0}
