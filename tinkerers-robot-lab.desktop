@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Tinkerer's Robot Lab
+Comment=Ignite Tinkerers Spark Table electronics trainer
+TryExec=python3
+Exec=bash -lc 'cd "$(dirname "$1")" && exec bash "./Launch Tinkerers Robot Lab.desktop"' _ %k
+Terminal=true
+Categories=Education;Science;

@@ -1,0 +1,3 @@
+const {test}=require('node:test'); const assert=require('node:assert/strict'); const fs=require('node:fs');const vm=require('node:vm');
+function engine(){const c={};vm.createContext(c);vm.runInContext(fs.readFileSync(__dirname+'/engine.js','utf8'),c);return c.LabEngine;}
+test('connection trainer requires all connections and exact ordered blocks',()=>{const e=engine();const l={connections:[['a','b'],['b','c']],blocks:[{type:'start'},{type:'on'}]};assert.equal(e.validate(l,[['b','a']],['start','on']).ok,false);assert.equal(e.validate(l,[['b','a'],['b','c']],['on','start']).ok,false);assert.equal(e.validate(l,[['b','a'],['b','c']],['start','on']).ok,true);assert.equal(e.validate(l,[['b','a'],['b','c'],['a','c']],['start','on']).ok,false);});

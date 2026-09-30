@@ -1,0 +1,1 @@
+{"name":"ignite-tinkerers-robot-lab","version":"1.0.0","private":true,"scripts":{"test":"node --test *.test.cjs","test:browser":"playwright test","start":"python3 -m http.server 5186 --bind 127.0.0.1"},"devDependencies":{"@playwright/test":"1.63.0"}}
