@@ -4,7 +4,7 @@ const $ = s => document.querySelector(s);
 let current=0,sandbox=false,wires=[],blocks=[],selected=null,running=false,timer=null,angle=0,done=[];
 try {const saved=JSON.parse(localStorage.getItem('ignite-progress')||'[]');if(Array.isArray(saved))done=[...new Set(saved.filter(n=>Number.isInteger(n)&&n>=1&&n<=5))];}catch{}
 const names={'uno:5v':'UNO 5V','uno:gnd':'UNO GND','uno:13':'UNO D13','uno:2':'UNO D2','uno:9':'UNO D9','uno:a0':'UNO A0','rail:plus':'+ rail','rail:minus':'− rail','res:in':'Resistor IN','res:out':'Resistor OUT','led:anode':'LED +','led:cathode':'LED −','button:out':'Button OUT','button:gnd':'Button GND','servo:power':'Servo +','servo:ground':'Servo GND','servo:signal':'Servo signal','pot:power':'Pot +','pot:ground':'Pot GND','pot:wiper':'Pot wiper'};
-const SANDBOX_BLOCKS=[{type:'start',label:'Setup: D13 = OUTPUT'},{type:'on',label:'D13 HIGH → LED on'},{type:'off',label:'D13 LOW → LED off'}];
+const SANDBOX_BLOCKS=(()=>{const seen=new Set();const out=[];for(const lesson of LESSONS){for(const block of lesson.blocks){if(seen.has(block.type))continue;seen.add(block.type);out.push({type:block.type,label:block.label});}}return out;})();
 const SANDBOX_HARDWARE='Sandbox is a hazard playground on the same virtual bench, not SPICE and not a USB-connected Arduino. Dead shorts, an LED with no series resistor, a GPIO pin jammed to ground, and a servo powered from a GPIO pin puff harmless purple smoke and tell you why. A physical short can destroy parts for real: power off before rewiring, never use GPIO for motor power, and ask a facilitator to inspect hardware before you apply power.';
 const lesson=()=>LESSONS[current];
 const pin=(id,label,cls='')=>`<button class="pin ${cls}" data-pin="${id}" aria-label="Connect ${names[id]}">${label}</button>`;
@@ -36,12 +36,13 @@ function loadSandbox(){
   $('#mission-title').textContent='Break it. Then fix it.';
   $('#concept').textContent='A real bench punishes dead shorts and unprotected parts. This sandbox does too — with harmless purple smoke and a sentence about why. Reset, rewind the last wire, and try again.';
   $('#parts-list').replaceChildren(...['Arduino UNO R3 (5V logic)','Breadboard and jumper wires','Red LED','220 ohm resistor','Momentary pushbutton','SG90 servo','10 kohm potentiometer'].map(t=>{const li=document.createElement('li');li.textContent=t;return li;}));
-  $('#steps').replaceChildren(...['Tap any two labeled pins. There is no recipe.','Skip the resistor, short 5V to GND, or power a servo from a GPIO pin if you want to see purple smoke.','Add blocks if you want a program, then run it. Smoke means power off and rethink — nothing here is actually destroyed.'].map(t=>{const li=document.createElement('li');li.textContent=t;return li;}));
+  $('#steps').replaceChildren(...['Tap any two labeled pins. There is no recipe.','Skip the resistor, short 5V to GND, or power a servo from a GPIO pin if you want to see purple smoke.','Every block from the five lessons is here. Mix blink, button, sweep, or pot-to-servo, then run it. Smoke means power off and rethink — nothing here is actually destroyed.'].map(t=>{const li=document.createElement('li');li.textContent=t;return li;}));
   $('#uno-pins').innerHTML=[['uno:5v','5V'],['uno:gnd','GND'],['uno:13','D13'],['uno:2','D2'],['uno:9','D9'],['uno:a0','A0']].map(([id,label])=>pin(id,label)).join('');
   $('#rails').innerHTML=pin('rail:plus','+ POWER','rail-pin plus')+pin('rail:minus','− GROUND','rail-pin minus');
   $('#parts-on-board').innerHTML=partsHtml('all');
   $('#live-controls').innerHTML='<button id="press-button" class="primary">Press virtual button</button><label for="pot-value">Turn the potentiometer <strong id="angle-label">20°</strong></label><input type="range" id="pot-value" min="0" max="1023" value="0"><span id="analog-label">Analog input: 0 / 1023 · Output: 20°</span>';
-  $('#block-palette').innerHTML=SANDBOX_BLOCKS.map((b,n)=>`<button class="block" data-add="${n}"><small>${n+1}</small>${b.label}<em>＋</em></button>`).join('');
+  const mini=$('.mini-label');if(mini)mini.textContent='ALL BLOCKS · MIX AND MATCH';
+  $('#block-palette').innerHTML=SANDBOX_BLOCKS.map((b,n)=>`<button class="block" data-add="${n}" data-type="${b.type}"><small>${n+1}</small>${b.label}<em>＋</em></button>`).join('');
   renderScript();renderWires();status('Tap any two pins. Run it when you are curious — or reckless.');
   attachLive();
 }
@@ -52,7 +53,8 @@ function load(i){
   const pins=new Set(l.connections.flat());$('#uno-pins').innerHTML=[['uno:5v','5V'],['uno:gnd','GND'],['uno:13','D13'],['uno:2','D2'],['uno:9','D9'],['uno:a0','A0']].filter(([id])=>pins.has(id)).map(([id,label])=>pin(id,label)).join('');$('#rails').innerHTML=pin('rail:plus','+ POWER','rail-pin plus')+pin('rail:minus','− GROUND','rail-pin minus');
   $('#parts-on-board').innerHTML=i<3?partsHtml(i===2?'button':'led'):partsHtml(i===4?'pot':'servo');
   $('#live-controls').innerHTML=i===2?'<button id="press-button" class="primary">Press virtual button</button><span> LED follows the button while running.</span>':i===4?'<label for="pot-value">Turn the potentiometer <strong id="angle-label">20°</strong></label><input type="range" id="pot-value" min="0" max="1023" value="0"><span id="analog-label">Analog input: 0 / 1023 · Output: 20°</span>':i===3?'<span id="angle-label">Servo position: 20° — run your script to start the sweep.</span>':'';
-  $('#block-palette').innerHTML=l.blocks.map((b,n)=>`<button class="block" data-add="${n}"><small>${n+1}</small>${b.label}<em>＋</em></button>`).join('');renderScript();renderWires();status('Connect your wires, add your blocks, then see what happens.');
+  const mini=$('.mini-label');if(mini)mini.textContent='BLOCK RECIPE · ADD IN THIS ORDER';
+  $('#block-palette').innerHTML=l.blocks.map((b,n)=>`<button class="block" data-add="${n}" data-type="${b.type}"><small>${n+1}</small>${b.label}<em>＋</em></button>`).join('');renderScript();renderWires();status('Connect your wires, add your blocks, then see what happens.');
   attachLive();
 }
 function palette(){return sandbox?SANDBOX_BLOCKS:lesson().blocks;}
@@ -73,13 +75,26 @@ function renderWires(){
 function drawWires(){const r=$('#board').getBoundingClientRect();$('#wires').innerHTML=wires.map((w,i)=>{const a=document.querySelector(`[data-pin="${w[0]}"]`).getBoundingClientRect(),b=document.querySelector(`[data-pin="${w[1]}"]`).getBoundingClientRect();const x1=a.left+a.width/2-r.left,y1=a.top+12-r.top,x2=b.left+b.width/2-r.left,y2=b.top+12-r.top;const color=w.some(id=>/gnd|ground|minus|cathode/.test(id))?'#52655a':w.some(id=>/5v|plus|power/.test(id))?'#d27158':'#c39436';return `<path d="M${x1},${y1} C${x1},${y1+30+i*3} ${x2},${y2+30+i*3} ${x2},${y2}" fill="none" stroke="#f8f7ef" stroke-width="6"/><path d="M${x1},${y1} C${x1},${y1+30+i*3} ${x2},${y2+30+i*3} ${x2},${y2}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round"/>`;}).join('');}
 function setServo(value){$('#servo-horn').style.transform=`rotate(${value-90}deg)`;$('#angle-label').textContent=`Servo position: ${value}°`;}
 function runSandbox(){
-  if(!wires.length){status('Nothing connected yet. Tap two pins to start.');return;}
-  const last=[...blocks].reverse().find(t=>t==='on'||t==='off');
-  const result=LabEngine.play(wires,{gpio:{13:last==='on'?'high':'low'}});
+  const mode=LabEngine.programMode(blocks);
+  if(!wires.length && mode==='idle'){status('Nothing connected yet. Tap two pins to start.');return;}
+  const driveHigh=mode==='led_on'||mode==='blink';
+  const result=LabEngine.play(wires,{gpio:{13:driveHigh?'high':'low'}});
   status(result.message,result.smoked);
   if(result.smoked){showSmoke(result.why);return;}
   running=true;$('#run').textContent='■ Stop experiment';
-  if(result.led==='on')$('#led-bulb')?.classList.add('lit');
+  const pathReady=LabEngine.inspect(wires).led==='ready';
+  if(mode==='led_on' && result.led==='on')$('#led-bulb')?.classList.add('lit');
+  if(mode==='led_off')$('#led-bulb')?.classList.remove('lit');
+  if(mode==='blink' && pathReady){
+    $('#led-bulb')?.classList.add('lit');
+    timer=setInterval(()=>$('#led-bulb').classList.toggle('lit'),500);
+    status('Blinking. HIGH 500 ms, LOW 500 ms.');
+  }
+  if(mode==='button')status('Running. Press the virtual button — D2 LOW lights the LED.');
+  if(mode==='sweep'){let value=20,dir=1;setServo(20);timer=setInterval(()=>{value+=dir*2;if(value>=160||value<=20)dir*=-1;setServo(value);},40);status('Sweeping the servo 20° to 160°.');}
+  if(mode==='pot'){setServo(Math.round(20+Number($('#pot-value')?.value||0)*140/1023));status('Potentiometer mapped to servo. Turn the knob.');}
+  if(mode==='custom')status('Mix a lesson recipe: blink, button, sweep, or read → map → servo.');
+  if(mode==='idle' && result.led==='on')$('#led-bulb')?.classList.add('lit');
 }
 function run(){if(running){stop();status('Simulation paused. Your circuit is ready when you are.');return;}if(sandbox){runSandbox();return;}const result=LabEngine.validate(lesson(),wires,blocks);status(result.message,!result.ok);if(!result.ok)return;running=true;$('#run').textContent='■ Stop experiment';$('#finish').hidden=false;if(current===0)$('#led-bulb').classList.add('lit');if(current===1){$('#led-bulb').classList.add('lit');timer=setInterval(()=>$('#led-bulb').classList.toggle('lit'),500);}if(current===3){let value=20,dir=1;setServo(20);timer=setInterval(()=>{value+=dir*2;if(value>=160||value<=20)dir*=-1;setServo(value);},40);}if(current===4)setServo(Math.round(20+Number($('#pot-value').value)*140/1023));}
 document.addEventListener('click',e=>{const pinEl=e.target.closest('[data-pin]');if(pinEl){stop();const id=pinEl.dataset.pin;if(!selected)selected=id;else if(selected===id)selected=null;else{const pair=[selected,id];if(!wires.some(w=>LabEngine.key(w)===LabEngine.key(pair)))wires.push(pair);selected=null;}renderWires();status(sandbox?'Keep connecting. Run it when you want to know if it smokes.':'Keep connecting. The highlighted pins show your next wire.');return;}const sand=e.target.closest('[data-sandbox]');if(sand){load('sandbox');return;}const level=e.target.closest('[data-level]');if(level)load(Number(level.dataset.level));const add=e.target.closest('[data-add]');if(add){stop();if(blocks.length>=12){status('Script is full. Remove a block or clear the script.',true);return;}blocks.push(palette()[Number(add.dataset.add)].type);renderScript();}const remove=e.target.closest('[data-remove-block]');if(remove){stop();blocks.splice(Number(remove.dataset.removeBlock),1);renderScript();}const wire=e.target.closest('[data-remove-wire]');if(wire){stop();wires.splice(Number(wire.dataset.removeWire),1);renderWires();}});

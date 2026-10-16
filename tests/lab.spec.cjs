@@ -54,6 +54,33 @@ test('sandbox shorts 5V to GND and puffs purple smoke', async ({page}) => {
   await page.screenshot({path: 'evidence/sandbox-smoke.png', fullPage: true});
 });
 
+test('sandbox palette offers every unique lesson block and can run them', async ({page}) => {
+  await page.goto('/');
+  await page.locator('[data-sandbox]').click();
+  const expected = await page.evaluate(() => {
+    const seen = [];
+    for (const lesson of LESSONS) {
+      for (const block of lesson.blocks) {
+        if (!seen.includes(block.type)) seen.push(block.type);
+      }
+    }
+    return seen;
+  });
+  expect(expected.sort()).toEqual(['button', 'map', 'off', 'on', 'read', 'repeat', 'servo', 'start', 'sweep']);
+  const palette = page.locator('#block-palette [data-add]');
+  await expect(palette).toHaveCount(expected.length);
+  const types = await page.evaluate(() =>
+    [...document.querySelectorAll('#block-palette [data-add]')].map(btn => btn.dataset.type)
+  );
+  expect(types.sort()).toEqual(expected.sort());
+  await page.locator('#block-palette [data-type="start"]').click();
+  await page.locator('#block-palette [data-type="repeat"]').click();
+  await page.locator('#block-palette [data-type="sweep"]').click();
+  await expect(page.locator('#script [data-remove-block]')).toHaveCount(3);
+  await page.locator('#run').click();
+  await expect(page.locator('#status')).toContainText(/sweep|running|servo/i);
+});
+
 test('potentiometer maps analog input onto a conservative servo angle', async ({page}) => {
   await page.goto('/');
   await page.locator('[data-level="4"]').click();

@@ -105,5 +105,27 @@ var LabEngine = (() => {
     return report;
   }
 
-  return {key, validate, inspect, play};
+  function programMode(blocks) {
+    const seq = (blocks || []).join('|');
+    const modes = {
+      '': 'idle',
+      'start|on': 'led_on',
+      'on': 'led_on',
+      'start|off': 'led_off',
+      'off': 'led_off',
+      'start|repeat|on|off': 'blink',
+      'repeat|on|off': 'blink',
+      'start|repeat|button': 'button',
+      'repeat|button': 'button',
+      'button': 'button',
+      'start|repeat|sweep': 'sweep',
+      'repeat|sweep': 'sweep',
+      'sweep': 'sweep',
+      'start|read|map|servo': 'pot',
+      'read|map|servo': 'pot'
+    };
+    return modes[seq] || 'custom';
+  }
+
+  return {key, validate, inspect, play, programMode};
 })();

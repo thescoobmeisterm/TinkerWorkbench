@@ -23,7 +23,7 @@ Any level can be selected, useful for a drop-in learning table. All controls sup
 
 ## Sandbox (purple smoke)
 
-After the five experiments, **Sandbox** is free play on the same bench. There is no recipe. Wire any two labeled pins, then run it.
+After the five experiments, **Sandbox** is free play on the same bench. There is no recipe. Wire any two labeled pins, then run it. The sandbox palette includes every unique script block from the five lessons (setup, on, off, repeat, button, sweep, read, map, servo) so you can mix blink, button, sweep, or pot-to-servo programs.
 
 Harmless purple smoke puffs — with a one-sentence why — when you:
 

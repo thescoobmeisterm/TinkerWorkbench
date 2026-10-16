@@ -79,3 +79,15 @@ test('sandbox play lights the LED when D13 is driven on the safe path', () => {
   const off = e.play(ledSafe, {gpio: {13: 'low'}});
   assert.equal(off.led, 'off');
 });
+
+test('sandbox programs reuse every unique lesson block type', () => {
+  const e = engine();
+  assert.equal(typeof e.programMode, 'function');
+  assert.equal(e.programMode(['start', 'on']), 'led_on');
+  assert.equal(e.programMode(['start', 'repeat', 'on', 'off']), 'blink');
+  assert.equal(e.programMode(['start', 'repeat', 'button']), 'button');
+  assert.equal(e.programMode(['start', 'repeat', 'sweep']), 'sweep');
+  assert.equal(e.programMode(['start', 'read', 'map', 'servo']), 'pot');
+  assert.equal(e.programMode(['start', 'off']), 'led_off');
+  assert.equal(e.programMode([]), 'idle');
+});
